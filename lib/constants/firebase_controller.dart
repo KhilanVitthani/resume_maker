@@ -1,96 +1,46 @@
-import 'package:swaminarayan_status/app/models/save_model.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io';
 
-import '../app/models/daily_thought_model.dart';
-import '../utilities/ad_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:path/path.dart';
+
+import '../models/resumeModel.dart';
 
 class FireController {
   static FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
   final CollectionReference _postCollectionReferance =
-      _firebaseFirestore.collection("post");
-  final CollectionReference _dailyThoughtCollectionReferance =
-      _firebaseFirestore.collection("dailyThought");
-  final CollectionReference _adsReferance =
-      _firebaseFirestore.collection("Ads");
+      _firebaseFirestore.collection("resume");
 
-  Stream<QuerySnapshot> getPost() {
-    print('getMessage');
-    return _postCollectionReferance
-        .orderBy("dateTime", descending: false)
-        .snapshots();
+  Future<void> addData({required resumeModel resumeData}) async {
+    if (resumeData.image == null) return;
+    final fileName = basename(resumeData.image.toString());
+    final destination = '$fileName';
+
+    try {
+      final ref = firebase_storage.FirebaseStorage.instance
+          .ref(destination)
+          .child('file/');
+      await ref.putFile(File(resumeData.image!));
+      String urlUploaded = (await ref.getDownloadURL()).toString();
+      if (urlUploaded != "") {
+        // String skills="";
+
+        // print(skills);
+        // addResumeController.selected_skills.forEach((element) {
+        //   skills   = skills+element+",";
+        // });
+        await _postCollectionReferance
+            .doc(resumeData.uId)
+            .set(resumeData.toJson());
+      }
+      print(urlUploaded);
+    } catch (e) {
+      print('error occured');
+    }
   }
 
-  Future<List<dailyThoughtModel>> getPostData() async {
-    print('getMessage');
-    QuerySnapshot querySnapshot = await _postCollectionReferance
-        .orderBy("dateTime", descending: false)
-        .get();
-    List<dailyThoughtModel> result = [];
-    querySnapshot.docs.forEach((doc) {
-      QueryDocumentSnapshot docu = doc;
-      print(docu.data() as Map<String, dynamic>);
-      result
-          .add(dailyThoughtModel.fromJson(docu.data() as Map<String, dynamic>));
-    });
-    return result;
-  }
-
-  Future<List<dailyThoughtModel>> getDailyData() async {
-    print('getMessage');
-    QuerySnapshot querySnapshot = await _dailyThoughtCollectionReferance
-        .orderBy("dateTime", descending: false)
-        .get();
-    List<dailyThoughtModel> result = [];
-    querySnapshot.docs.forEach((doc) {
-      QueryDocumentSnapshot docu = doc;
-      print(docu.data() as Map<String, dynamic>);
-      result
-          .add(dailyThoughtModel.fromJson(docu.data() as Map<String, dynamic>));
-    });
-    return result;
-  }
-
-  Stream<QuerySnapshot> getDailyThought() {
-    print('getMessage');
-    return _dailyThoughtCollectionReferance
-        .orderBy("dateTime", descending: false)
-        .snapshots();
-  }
-
-  Future<void> saveQuote({required bool status, required String Uid}) async {
-    return await _dailyThoughtCollectionReferance
-        .doc(Uid)
-        .update({"isSave": status});
-  }
-
-  Future<bool> adsVisible() async {
-    print('getMessage');
-    QuerySnapshot querySnapshot = await _adsReferance.get();
-    querySnapshot.docs.forEach((doc) {
-      QueryDocumentSnapshot docu = doc;
-      print(docu.data() as Map<String, dynamic>);
-      Map m = docu.data() as Map<String, dynamic>;
-      AdService.isVisible.value = m['isVisible'];
-    });
-    return AdService.isVisible.value;
-  }
-
-  Future<void> addData() async {
-    String uId = _postCollectionReferance.doc().id;
-    print(uId);
-    return await _postCollectionReferance.doc(uId).set({
-      "dateTime": DateTime.now().millisecondsSinceEpoch,
-      //  "${int.parse(DateTime.now().millisecondsSinceEpoch.toString())}",
-      "mediaLink": "",
-      "uId": "${uId}",
-      "videoThumbnail": "",
-    });
-  }
-
-  Future<void> LikeQuote({required bool status, required String Uid}) async {
-    return await _dailyThoughtCollectionReferance
-        .doc(Uid)
-        .update({"isLike": status});
+  Stream<QuerySnapshot> getResumeData() {
+    return _postCollectionReferance.snapshots();
   }
 }
