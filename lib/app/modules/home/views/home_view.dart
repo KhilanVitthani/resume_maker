@@ -163,7 +163,38 @@ class HomeView extends GetView<HomeController> {
                   ),
                 ],
               ),
-            )
+            ),
+            Row(
+              children: [
+                Column(
+                  children: [
+                    Text(
+                      "My Contact",
+                      style: TextStyle(
+                        color: Color(0xff942637),
+                        fontSize: MySize.getHeight(15),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Spacing.height(10),
+                    contactItemWidget(
+                      name: data.email!,
+                      icon: Icons.email_outlined,
+                    ),
+                    Spacing.height(10),
+                    contactItemWidget(
+                      name: data.contact!,
+                      icon: Icons.phone,
+                    ),
+                    Spacing.height(10),
+                    contactItemWidget(
+                      name: data.address!,
+                      icon: Icons.location_on_outlined,
+                    ),
+                  ],
+                )
+              ],
+            ),
           ],
         ),
       ),
@@ -176,5 +207,27 @@ class HomeView extends GetView<HomeController> {
 
   Widget Frame3({required data, required BuildContext context}) {
     return Container();
+  }
+
+  contactItemWidget({
+    String name = "",
+    IconData icon = Icons.abc,
+  }) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: MySize.getHeight(22),
+          color: Colors.black,
+        ),
+        Spacing.width(10),
+        Text(
+          name,
+          style: TextStyle(
+            fontSize: MySize.getHeight(15),
+          ),
+        ),
+      ],
+    );
   }
 }
